@@ -77,6 +77,7 @@ function App() {
     fontFamily: 'Inter',
     zenMode: false,
     sortBy: 'updated',
+    colorScheme: 'coral',
   });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [statsModalOpen, setStatsModalOpen] = useState(false);
@@ -505,7 +506,7 @@ function App() {
   } : null;
 
   return (
-    <div className={`app ${settings.theme} ${settings.zenMode ? 'zen-mode' : ''}`}>
+    <div className={`app ${settings.theme} ${settings.zenMode ? 'zen-mode' : ''} color-${settings.colorScheme}`}>
       {/* Sidebar */}
       {!settings.zenMode && (
         <div 
@@ -939,10 +940,47 @@ function App() {
                   )}
                 </div>
               </div>
+              <div className="setting-section">
+                <h3>Color Scheme</h3>
+                
+                <div className="color-schemes">
+                  <button
+                    className={`color-scheme-btn ${settings.colorScheme === 'coral' ? 'active' : ''}`}
+                    onClick={() => setSettings((s) => ({ ...s, colorScheme: 'coral' }))}
+                  >
+                    <div className="color-preview coral-preview"></div>
+                    <span>Coral Sunset</span>
+                  </button>
+
+                  <button
+                    className={`color-scheme-btn ${settings.colorScheme === 'yellow' ? 'active' : ''}`}
+                    onClick={() => setSettings((s) => ({ ...s, colorScheme: 'yellow' }))}
+                  >
+                    <div className="color-preview yellow-preview"></div>
+                    <span>Warm Yellow</span>
+                  </button>
+
+                  <button
+                    className={`color-scheme-btn ${settings.colorScheme === 'mint' ? 'active' : ''}`}
+                    onClick={() => setSettings((s) => ({ ...s, colorScheme: 'mint' }))}
+                  >
+                    <div className="color-preview mint-preview"></div>
+                    <span>Mint Fresh</span>
+                  </button>
+
+                  <button
+                    className={`color-scheme-btn ${settings.colorScheme === 'lavender' ? 'active' : ''}`}
+                    onClick={() => setSettings((s) => ({ ...s, colorScheme: 'lavender' }))}
+                  >
+                    <div className="color-preview lavender-preview"></div>
+                    <span>Lavender Dream</span>
+                  </button>
+                </div>
+              </div>
 
               <div className="setting-section">
                 <h3>Appearance</h3>
-                
+
                 <div className="setting-group">
                   <label>Theme</label>
                   <select

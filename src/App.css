@@ -1,24 +1,55 @@
 @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-:root {
-  /* Monkeytype style but with coral/peach accent */
-  --bg-primary: #323437;
-  --bg-secondary: #2c2e31;
-  --bg-tertiary: #3c3e42;
-  --bg-hover: #3c3f44;
-  
+/* Coral Sunset (Default) */
+:root,
+.color-coral {
   --accent-primary: #ff9b76;
   --accent-secondary: #ffb088;
   --accent-success: #5fb573;
   --accent-danger: #ca4754;
   --accent-warning: #ffa94d;
+}
+
+/* Monkeytype Yellow */
+.color-yellow {
+  --accent-primary: #e2b714;
+  --accent-secondary: #ffa94d;
+  --accent-success: #5fb573;
+  --accent-danger: #ca4754;
+  --accent-warning: #ff9b44;
+}
+
+/* Mint Fresh */
+.color-mint {
+  --accent-primary: #6ee7b7;
+  --accent-secondary: #5dd9ab;
+  --accent-success: #34d399;
+  --accent-danger: #fb7185;
+  --accent-warning: #fbbf24;
+}
+
+/* Lavender Dream */
+.color-lavender {
+  --accent-primary: #a78bfa;
+  --accent-secondary: #c4b5fd;
+  --accent-success: #6ee7b7;
+  --accent-danger: #f87171;
+  --accent-warning: #fbbf24;
+}
+
+/* Base colors (same for all schemes) */
+:root {
+  --bg-primary: #1a1d23;
+  --bg-secondary: #13151a;
+  --bg-tertiary: #242931;
+  --bg-hover: #2a2f3a;
   
-  --text-primary: #d1d0c5;
-  --text-secondary: #646669;
-  --text-tertiary: #52575c;
+  --text-primary: #e2e8f0;
+  --text-secondary: #64748b;
+  --text-tertiary: #475569;
   
-  --border: #3c3e42;
-  --shadow: rgba(0, 0, 0, 0.4);
+  --border: #2d3139;
+  --shadow: rgba(0, 0, 0, 0.5);
   
   --radius-sm: 8px;
   --radius-md: 12px;
@@ -28,6 +59,41 @@
   --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+.app.light {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --bg-hover: #e2e8f0;
+  
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-tertiary: #94a3b8;
+  
+  --border: #e2e8f0;
+  --shadow: rgba(0, 0, 0, 0.08);
+}
+
+.app.light.color-coral {
+  --accent-primary: #ff7f50;
+  --accent-secondary: #ff9966;
+}
+
+.app.light.color-yellow {
+  --accent-primary: #d4a915;
+  --accent-secondary: #ff9933;
+}
+
+.app.light.color-mint {
+  --accent-primary: #34d399;
+  --accent-secondary: #10b981;
+}
+
+.app.light.color-lavender {
+  --accent-primary: #8b5cf6;
+  --accent-secondary: #a78bfa;
+}
+
 
 .app.light {
   --bg-primary: #f5f5f5;
@@ -1527,4 +1593,83 @@ select:focus-visible {
 .export-guide .secondary-btn {
   width: 100%;
   justify-content: center;
+}
+
+/* Color Scheme Selector */
+.color-schemes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.color-scheme-btn {
+  padding: 16px;
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: var(--transition);
+  font-family: 'Lexend', sans-serif;
+}
+
+.color-scheme-btn:hover {
+  border-color: var(--accent-primary);
+  background: var(--bg-hover);
+}
+
+.color-scheme-btn.active {
+  border-color: var(--accent-primary);
+  background: rgba(255, 155, 118, 0.1);
+}
+
+.color-scheme-btn span {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.color-preview {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.color-preview::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--color-1) 0%, var(--color-2) 100%);
+}
+
+.coral-preview {
+  --color-1: #ff9b76;
+  --color-2: #ffb088;
+}
+
+.yellow-preview {
+  --color-1: #e2b714;
+  --color-2: #ffa94d;
+}
+
+.mint-preview {
+  --color-1: #6ee7b7;
+  --color-2: #5dd9ab;
+}
+
+.lavender-preview {
+  --color-1: #a78bfa;
+  --color-2: #c4b5fd;
+}
+
+@media (max-width: 500px) {
+  .color-schemes {
+    grid-template-columns: 1fr;
+  }
 }
