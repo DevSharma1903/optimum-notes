@@ -25,12 +25,15 @@ import {
   FiCheckCircle,
   FiTag,
   FiList,
-  FiFileText,
   FiBold,
   FiItalic,
   FiCode,
   FiLink,
   FiTrendingUp,
+  FiInfo,
+  FiShield,
+  FiZap,
+  FiHeart,
 } from 'react-icons/fi';
 import {
   saveNotes,
@@ -39,8 +42,6 @@ import {
   loadSettings,
   saveFolders,
   loadFolders,
-  saveTemplates,
-  loadTemplates,
   generateId,
   formatDate,
   extractTags,
@@ -59,14 +60,11 @@ import { StatsModal } from './components/StatsModal';
 import './App.css';
 
 function App() {
-  // State - Initialize notes from localStorage
   const [notes, setNotes] = useState(() => {
     const saved = localStorage.getItem('notevault_notes');
     return saved ? JSON.parse(saved) : [];
   });
   const [folders, setFolders] = useState(['Personal', 'Work', 'Ideas']);
-  const [expandedFolders, setExpandedFolders] = useState(new Set(['Personal', 'Work', 'Ideas']));
-  const [templates, setTemplates] = useState([]);
   const [currentNote, setCurrentNote] = useState(null);
   const [currentFolder, setCurrentFolder] = useState('All');
   const [selectedTag, setSelectedTag] = useState(null);
@@ -80,24 +78,23 @@ function App() {
     colorScheme: 'coral',
   });
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [statsModalOpen, setStatsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('edit');
-  const [showTemplates, setShowTemplates] = useState(false);
 
   const editorRef = useRef(null);
   const viewRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Sidebar resize functionality
-  const [sidebarWidth, setSidebarWidth] = useState(320);
+  const [sidebarWidth, setSidebarWidth] = useState(260);
   const isResizing = useRef(false);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (!isResizing.current) return;
       const newWidth = e.clientX;
-      if (newWidth >= 250 && newWidth <= 500) {
+      if (newWidth >= 220 && newWidth <= 400) {
         setSidebarWidth(newWidth);
       }
     };
@@ -117,20 +114,14 @@ function App() {
     };
   }, []);
 
-  // Load data on mount and track user
   useEffect(() => {
-    // Track user activity
     trackUser();
-    
     const savedSettings = loadSettings();
     const savedFolders = loadFolders();
-    const savedTemplates = loadTemplates();
     
     setSettings(savedSettings);
     setFolders(savedFolders);
-    setTemplates(savedTemplates);
     
-    // Set current note if notes exist
     if (notes.length > 0) {
       const activeNotes = notes.filter(n => !n.isDeleted);
       if (activeNotes.length > 0) {
@@ -139,27 +130,18 @@ function App() {
     }
   }, []);
 
-  // Auto-save notes
   useEffect(() => {
     localStorage.setItem('notevault_notes', JSON.stringify(notes));
   }, [notes]);
 
-  // Save settings
   useEffect(() => {
     saveSettings(settings);
   }, [settings]);
 
-  // Save folders
   useEffect(() => {
     saveFolders(folders);
   }, [folders]);
 
-  // Save templates
-  useEffect(() => {
-    saveTemplates(templates);
-  }, [templates]);
-
-  // Setup CodeMirror editor
   useEffect(() => {
     if (!editorRef.current || !currentNote || viewMode === 'preview') return;
 
@@ -222,7 +204,6 @@ function App() {
     };
   }, [currentNote?.id, settings.theme, settings.fontSize, settings.lineHeight, settings.fontFamily, viewMode]);
 
-  // Update note content
   const updateNoteContent = (content) => {
     setNotes((prev) =>
       prev.map((note) =>
@@ -232,12 +213,9 @@ function App() {
       )
     );
     setCurrentNote((prev) => ({ ...prev, content, updatedAt: Date.now() }));
-    
-    // Track activity
     recordActivity();
   };
 
-  // Auto-update note title from first line
   useEffect(() => {
     if (currentNote && currentNote.content) {
       const firstLine = currentNote.content
@@ -257,12 +235,11 @@ function App() {
     }
   }, [currentNote?.content]);
 
-  // Create new note
-  const createNote = (templateContent = '') => {
+  const createNote = () => {
     const newNote = {
       id: generateId(),
       title: 'Untitled Note',
-      content: templateContent || '# Your Note Title\n\nStart typing your notes here...\n\n**Tip:** Use # for headers, **bold**, *italic*, - [ ] for tasks',
+      content: '# Your Note Title\n\nStart writing...',
       folder: currentFolder === 'All' || currentFolder === 'Favorites' || currentFolder === 'Recent' || currentFolder === 'Trash' 
         ? 'Personal' 
         : currentFolder,
@@ -273,18 +250,9 @@ function App() {
     };
     setNotes((prev) => [newNote, ...prev]);
     setCurrentNote(newNote);
-    setShowTemplates(false);
-    
-    // Track note creation
-    recordNoteCreation(countWords(templateContent || ''));
+    recordNoteCreation(0);
   };
 
-  // Create note from template
-  const createFromTemplate = (template) => {
-    createNote(template.content);
-  };
-
-  // Toggle favorite
   const toggleFavorite = (noteId, e) => {
     e.stopPropagation();
     setNotes((prev) =>
@@ -297,7 +265,6 @@ function App() {
     }
   };
 
-  // Delete note
   const deleteNote = (id, e) => {
     e.stopPropagation();
     if (currentFolder === 'Trash') {
@@ -324,7 +291,6 @@ function App() {
     }
   };
 
-  // Restore note from trash
   const restoreNote = (id, e) => {
     e.stopPropagation();
     setNotes((prev) =>
@@ -334,18 +300,6 @@ function App() {
     );
   };
 
-  // Toggle folder expand
-  const toggleFolderExpand = (folder) => {
-    const newExpanded = new Set(expandedFolders);
-    if (newExpanded.has(folder)) {
-      newExpanded.delete(folder);
-    } else {
-      newExpanded.add(folder);
-    }
-    setExpandedFolders(newExpanded);
-  };
-
-  // Create new folder
   const createFolder = () => {
     const folderName = prompt('Enter folder name:');
     if (folderName && folderName.trim()) {
@@ -353,7 +307,6 @@ function App() {
     }
   };
 
-  // Delete folder
   const deleteFolder = (folderName, e) => {
     e.stopPropagation();
     if (window.confirm(`Delete folder "${folderName}"? Notes will be moved to Personal.`)) {
@@ -369,19 +322,16 @@ function App() {
     }
   };
 
-  // Export current note
   const handleExportNote = () => {
     if (currentNote) {
       exportNoteAsMarkdown(currentNote);
     }
   };
 
-  // Export all notes
   const handleExportAll = () => {
     exportNotesAsJSON(notes);
   };
 
-  // Import notes
   const handleImport = async (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -402,7 +352,6 @@ function App() {
     e.target.value = '';
   };
 
-  // Insert markdown formatting
   const insertMarkdown = (before, after = '') => {
     if (!viewRef.current) return;
     
@@ -417,10 +366,8 @@ function App() {
     });
   };
 
-  // Get all unique tags
   const allTags = [...new Set(notes.flatMap(note => extractTags(note.content)))];
 
-  // Sort notes
   const sortNotes = (notesToSort) => {
     switch (settings.sortBy) {
       case 'title':
@@ -433,7 +380,6 @@ function App() {
     }
   };
 
-  // Filter notes
   const filteredNotes = sortNotes(
     notes.filter((note) => {
       if (currentFolder === 'Trash') {
@@ -468,7 +414,6 @@ function App() {
     })
   );
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
@@ -496,7 +441,6 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [settings.zenMode, viewMode]);
 
-  // Calculate stats for current note
   const noteStats = currentNote ? {
     words: countWords(currentNote.content),
     chars: currentNote.content.length,
@@ -507,7 +451,6 @@ function App() {
 
   return (
     <div className={`app ${settings.theme} ${settings.zenMode ? 'zen-mode' : ''} color-${settings.colorScheme}`}>
-      {/* Sidebar */}
       {!settings.zenMode && (
         <div 
           className="sidebar" 
@@ -524,39 +467,11 @@ function App() {
         >
           <div className="sidebar-header">
             <h1>Optimum</h1>
-            <div className="header-actions">
-              <button onClick={() => setShowTemplates(!showTemplates)} className="icon-btn" title="New from Template">
-                <FiFileText />
-              </button>
-              <button onClick={() => createNote()} className="primary-btn" title="New Note (Ctrl+N)">
-                <FiPlus />
-              </button>
-            </div>
+            <button onClick={() => createNote()} className="primary-btn" title="New Note (Ctrl+N)">
+              <FiPlus />
+            </button>
           </div>
 
-          {/* Templates Dropdown */}
-          {showTemplates && (
-            <div className="templates-dropdown">
-              <div className="templates-header">
-                <span>Choose Template</span>
-                <button onClick={() => setShowTemplates(false)}>
-                  <FiX />
-                </button>
-              </div>
-              {templates.map(template => (
-                <button
-                  key={template.id}
-                  className="template-item"
-                  onClick={() => createFromTemplate(template)}
-                >
-                  <FiFileText />
-                  {template.name}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Search */}
           <div className="search-box">
             <FiSearch />
             <input
@@ -572,7 +487,6 @@ function App() {
             )}
           </div>
 
-          {/* Folders */}
           <div className="folders">
             <div className="folders-header">
               <span>Folders</span>
@@ -584,7 +498,7 @@ function App() {
               className={`folder-btn ${currentFolder === 'All' ? 'active' : ''}`}
               onClick={() => { setCurrentFolder('All'); setSelectedTag(null); }}
             >
-              <FiFolder /> All Notes ({notes.filter(n => !n.isDeleted).length})
+              <FiFolder /> All ({notes.filter(n => !n.isDeleted).length})
             </button>
             <button
               className={`folder-btn ${currentFolder === 'Favorites' ? 'active' : ''}`}
@@ -600,49 +514,22 @@ function App() {
             </button>
             {folders.map((folder) => {
               const folderNotes = notes.filter((n) => n.folder === folder && !n.isDeleted);
-              const isExpanded = expandedFolders.has(folder);
               
               return (
-                <div key={folder}>
+                <button
+                  key={folder}
+                  className={`folder-btn ${currentFolder === folder ? 'active' : ''}`}
+                  onClick={() => { setCurrentFolder(folder); setSelectedTag(null); }}
+                >
+                  <FiFolder /> {folder} ({folderNotes.length})
                   <button
-                    className={`folder-btn ${currentFolder === folder ? 'active' : ''}`}
-                    onClick={() => { setCurrentFolder(folder); setSelectedTag(null); }}
+                    className="delete-folder"
+                    onClick={(e) => deleteFolder(folder, e)}
+                    title="Delete folder"
                   >
-                    <button 
-                      className="folder-chevron"
-                      onClick={(e) => { e.stopPropagation(); toggleFolderExpand(folder); }}
-                    >
-                      {isExpanded ? '▼' : '▶'}
-                    </button>
-                    <FiFolder /> {folder} ({folderNotes.length})
-                    <button
-                      className="delete-folder"
-                      onClick={(e) => deleteFolder(folder, e)}
-                      title="Delete folder"
-                    >
-                      <FiTrash2 />
-                    </button>
+                    <FiTrash2 />
                   </button>
-                  
-                  {isExpanded && folderNotes.length > 0 && (
-                    <div className="folder-notes">
-                      {folderNotes.slice(0, 5).map(note => (
-                        <div
-                          key={note.id}
-                          className={`folder-note-item ${currentNote?.id === note.id ? 'active' : ''}`}
-                          onClick={() => setCurrentNote(note)}
-                        >
-                          {note.title}
-                        </div>
-                      ))}
-                      {folderNotes.length > 5 && (
-                        <div className="folder-note-more">
-                          +{folderNotes.length - 5} more
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
+                </button>
               );
             })}
             <button
@@ -653,7 +540,6 @@ function App() {
             </button>
           </div>
 
-          {/* Tags */}
           {allTags.length > 0 && (
             <div className="tags-section">
               <div className="tags-header">
@@ -678,7 +564,6 @@ function App() {
             </div>
           )}
 
-          {/* Notes List */}
           <div className="notes-list">
             <div className="notes-list-header">
               <span>{filteredNotes.length} notes</span>
@@ -687,17 +572,14 @@ function App() {
                 onChange={(e) => setSettings(s => ({ ...s, sortBy: e.target.value }))}
                 className="sort-select"
               >
-                <option value="updated">Last Updated</option>
-                <option value="created">Date Created</option>
-                <option value="title">Title (A-Z)</option>
+                <option value="updated">Updated</option>
+                <option value="created">Created</option>
+                <option value="title">A-Z</option>
               </select>
             </div>
             {filteredNotes.length === 0 ? (
               <div className="no-notes">
                 <p>No notes found</p>
-                <button onClick={() => createNote()} className="primary-btn">
-                  <FiPlus /> Create Note
-                </button>
               </div>
             ) : (
               filteredNotes.map((note) => {
@@ -715,7 +597,7 @@ function App() {
                           <button
                             onClick={(e) => restoreNote(note.id, e)}
                             className="restore-note"
-                            title="Restore note"
+                            title="Restore"
                           >
                             <FiUpload />
                           </button>
@@ -723,7 +605,7 @@ function App() {
                           <button
                             onClick={(e) => toggleFavorite(note.id, e)}
                             className={`favorite-btn ${note.isFavorite ? 'active' : ''}`}
-                            title="Toggle favorite"
+                            title="Favorite"
                           >
                             <FiStar />
                           </button>
@@ -731,20 +613,19 @@ function App() {
                         <button
                           onClick={(e) => deleteNote(note.id, e)}
                           className="delete-note"
-                          title={currentFolder === 'Trash' ? 'Delete permanently' : 'Move to trash'}
+                          title="Delete"
                         >
                           <FiTrash2 />
                         </button>
                       </div>
                     </div>
                     <p className="note-preview">
-                      {note.content.replace(/^#+ /, '').substring(0, 100)}
+                      {note.content.replace(/^#+ /, '').substring(0, 80)}
                     </p>
                     <div className="note-meta">
-                      <span className="note-folder">{note.folder}</span>
                       {tasks.total > 0 && (
                         <span className="note-tasks">
-                          <FiCheckCircle size={12} /> {tasks.completed}/{tasks.total}
+                          {tasks.completed}/{tasks.total}
                         </span>
                       )}
                       <span className="note-time">{formatDate(note.updatedAt)}</span>
@@ -754,25 +635,28 @@ function App() {
               })
             )}
           </div>
+
+          <div className="sidebar-footer">
+            <button onClick={() => setAboutOpen(true)} className="footer-btn">
+              <FiInfo /> About
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Main Content */}
       <div className="main-content">
         {!settings.zenMode && (
           <div className="toolbar">
             <div className="toolbar-left">
               {currentNote && (
                 <>
-                  <span className="note-folder-badge">{currentNote.folder}</span>
                   {noteStats && noteStats.tasks.total > 0 && (
                     <span className="note-progress">
-                      <FiCheckCircle size={14} />
-                      {noteStats.tasks.percentage}% ({noteStats.tasks.completed}/{noteStats.tasks.total})
+                      {noteStats.tasks.completed}/{noteStats.tasks.total} tasks
                     </span>
                   )}
                   <span className="note-info">
-                    <FiEdit2 size={14} /> {formatDate(currentNote.updatedAt)}
+                    {formatDate(currentNote.updatedAt)}
                   </span>
                 </>
               )}
@@ -780,10 +664,10 @@ function App() {
             <div className="toolbar-actions">
               {currentNote && viewMode === 'edit' && (
                 <div className="markdown-toolbar">
-                  <button onClick={() => insertMarkdown('**', '**')} title="Bold (Ctrl+B)">
+                  <button onClick={() => insertMarkdown('**', '**')} title="Bold">
                     <FiBold />
                   </button>
-                  <button onClick={() => insertMarkdown('*', '*')} title="Italic (Ctrl+I)">
+                  <button onClick={() => insertMarkdown('*', '*')} title="Italic">
                     <FiItalic />
                   </button>
                   <button onClick={() => insertMarkdown('`', '`')} title="Code">
@@ -804,17 +688,17 @@ function App() {
                 <>
                   <button
                     onClick={() => setViewMode(mode => mode === 'edit' ? 'preview' : 'edit')}
-                    title={`${viewMode === 'edit' ? 'Preview' : 'Edit'} (Ctrl+P)`}
+                    title="Preview"
                     className={viewMode === 'preview' ? 'active' : ''}
                   >
                     <FiBook />
                   </button>
-                  <button onClick={handleExportNote} title="Export Note">
+                  <button onClick={handleExportNote} title="Export">
                     <FiDownload />
                   </button>
                 </>
               )}
-              <button onClick={() => setStatsModalOpen(true)} title="Statistics">
+              <button onClick={() => setStatsModalOpen(true)} title="Stats">
                 <FiTrendingUp />
               </button>
               <button onClick={() => setSettings((s) => ({ ...s, zenMode: true }))} title="Zen Mode">
@@ -824,21 +708,6 @@ function App() {
                 <FiSettings />
               </button>
             </div>
-          </div>
-        )}
-
-        {/* Note Stats Bar */}
-        {!settings.zenMode && currentNote && noteStats && (
-          <div className="stats-bar">
-            <span><strong>{noteStats.words}</strong> words</span>
-            <span><strong>{noteStats.chars}</strong> characters</span>
-            <span><strong>{noteStats.reading}</strong> min read</span>
-            {noteStats.tags.length > 0 && (
-              <span className="stats-tags">
-                <FiTag size={12} />
-                {noteStats.tags.join(' ')}
-              </span>
-            )}
           </div>
         )}
 
@@ -855,9 +724,9 @@ function App() {
             <div className="empty-state">
               <div className="empty-state-content">
                 <h2>Welcome to Optimum</h2>
-                <p>Create your first note to get started</p>
+                <p>Create your first note</p>
                 <button onClick={() => createNote()} className="primary-btn large">
-                  <FiPlus /> Create Note
+                  <FiPlus /> New Note
                 </button>
               </div>
             </div>
@@ -865,6 +734,94 @@ function App() {
         </div>
       </div>
 
+      {/* About Modal */}
+      {aboutOpen && (
+        <div className="modal-overlay" onClick={() => setAboutOpen(false)}>
+          <div className="modal about-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="about-header-content">
+                <FiShield size={24} />
+                <h2>About Optimum</h2>
+              </div>
+              <button onClick={() => setAboutOpen(false)}>
+                <FiX />
+              </button>
+            </div>
+            <div className="modal-content">
+              <div className="about-section">
+                <h3>Our Mission</h3>
+                <p>
+                  Optimum is a privacy-first, minimalist note-taking app designed for people who value simplicity and data ownership.
+                </p>
+              </div>
+
+              <div className="about-section">
+                <h3>
+                  <FiShield size={18} />
+                  Privacy-First Design
+                </h3>
+                <ul className="about-list">
+                  <li>
+                    <strong>100% Local Storage</strong>
+                    <p>All your notes are stored locally in your browser. We never see or touch your data.</p>
+                  </li>
+                  <li>
+                    <strong>No Tracking</strong>
+                    <p>Zero analytics, no cookies, no third-party scripts. Your writing is yours alone.</p>
+                  </li>
+                  <li>
+                    <strong>No Account Required</strong>
+                    <p>Start writing immediately. No sign-up, no email, no personal information.</p>
+                  </li>
+                  <li>
+                    <strong>Open Source Spirit</strong>
+                    <p>Built with transparency in mind. Your trust is our priority.</p>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="about-section">
+                <h3>
+                  <FiZap size={18} />
+                  Core Principles
+                </h3>
+                <ul className="about-list">
+                  <li>
+                    <strong>Speed</strong>
+                    <p>Lightning-fast load times. No server delays, no waiting.</p>
+                  </li>
+                  <li>
+                    <strong>Simplicity</strong>
+                    <p>Clean, distraction-free interface. Just you and your thoughts.</p>
+                  </li>
+                  <li>
+                    <strong>Customization</strong>
+                    <p>Personalize your experience with themes, colors, and fonts.</p>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="about-section">
+                <h3>
+                  <FiHeart size={18} />
+                  Data Ownership
+                </h3>
+                <p>
+                  Your notes belong to you. Export them anytime as Markdown or JSON. 
+                  Move them to another app, back them up to your cloud storage, or keep them local. 
+                  You're always in control.
+                </p>
+              </div>
+
+              <div className="about-footer">
+                <p>Made with care for writers, thinkers, and privacy enthusiasts.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Modal - CONTINUING IN NEXT MESSAGE */}
       {/* Settings Modal */}
       {settingsOpen && (
         <div className="modal-overlay" onClick={() => setSettingsOpen(false)}>
@@ -876,47 +833,25 @@ function App() {
               </button>
             </div>
             <div className="modal-content">
-              {/* Data Backup Warning */}
               <div className="backup-warning">
                 <div className="warning-icon">⚠️</div>
                 <div className="warning-content">
-                  <h3>Important: Backup Your Notes</h3>
-                  <p>Your notes are stored locally in your browser. They will be lost if you:</p>
-                  <ul>
-                    <li>Clear browser data or cache</li>
-                    <li>Switch to a different device or browser</li>
-                    <li>Reinstall your browser</li>
-                  </ul>
-                  <p className="warning-cta">
-                    <strong>Export your notes regularly to keep them safe!</strong>
-                  </p>
+                  <h3>Backup Your Notes</h3>
+                  <p>Your notes are stored locally. Export regularly to avoid data loss.</p>
                 </div>
               </div>
 
               <div className="setting-section">
                 <h3>Backup & Export</h3>
                 <div className="export-guide">
-                  <div className="export-step">
-                    <div className="step-number">1</div>
-                    <div className="step-content">
-                      <p><strong>Export All Notes</strong></p>
-                      <p>Download a complete backup as JSON file</p>
-                    </div>
-                  </div>
                   <button onClick={handleExportAll} className="export-btn">
                     <FiDownload /> Export All Notes
                   </button>
                   
-                  <div className="export-step" style={{ marginTop: '16px' }}>
-                    <div className="step-number">2</div>
-                    <div className="step-content">
-                      <p><strong>Import Notes</strong></p>
-                      <p>Restore from a previously exported backup</p>
-                    </div>
-                  </div>
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     className="secondary-btn"
+                    style={{ marginTop: '12px', width: '100%' }}
                   >
                     <FiUpload /> Import Notes
                   </button>
@@ -933,13 +868,11 @@ function App() {
                       <p>
                         <strong>{notes.filter(n => !n.isDeleted).length}</strong> active notes
                       </p>
-                      <p className="backup-tip">
-                        💡 Tip: Keep your exported file in Google Drive or Dropbox
-                      </p>
                     </div>
                   )}
                 </div>
               </div>
+
               <div className="setting-section">
                 <h3>Color Scheme</h3>
                 
@@ -949,7 +882,7 @@ function App() {
                     onClick={() => setSettings((s) => ({ ...s, colorScheme: 'coral' }))}
                   >
                     <div className="color-preview coral-preview"></div>
-                    <span>Coral Sunset</span>
+                    <span>Coral</span>
                   </button>
 
                   <button
@@ -957,7 +890,7 @@ function App() {
                     onClick={() => setSettings((s) => ({ ...s, colorScheme: 'yellow' }))}
                   >
                     <div className="color-preview yellow-preview"></div>
-                    <span>Warm Yellow</span>
+                    <span>Yellow</span>
                   </button>
 
                   <button
@@ -965,7 +898,7 @@ function App() {
                     onClick={() => setSettings((s) => ({ ...s, colorScheme: 'mint' }))}
                   >
                     <div className="color-preview mint-preview"></div>
-                    <span>Mint Fresh</span>
+                    <span>Mint</span>
                   </button>
 
                   <button
@@ -973,14 +906,14 @@ function App() {
                     onClick={() => setSettings((s) => ({ ...s, colorScheme: 'lavender' }))}
                   >
                     <div className="color-preview lavender-preview"></div>
-                    <span>Lavender Dream</span>
+                    <span>Lavender</span>
                   </button>
                 </div>
               </div>
 
               <div className="setting-section">
                 <h3>Appearance</h3>
-
+                
                 <div className="setting-group">
                   <label>Theme</label>
                   <select
@@ -1040,14 +973,14 @@ function App() {
                   onClick={() => {
                     if (
                       window.confirm(
-                        'Are you sure? This will delete ALL notes and settings permanently!'
+                        'Delete ALL notes permanently?'
                       )
                     ) {
                       localStorage.clear();
                       setNotes([]);
                       setCurrentNote(null);
                       setFolders(['Personal', 'Work', 'Ideas']);
-                      alert('All data cleared!');
+                      alert('All data cleared');
                     }
                   }}
                   className="danger-btn"
@@ -1060,14 +993,12 @@ function App() {
         </div>
       )}
 
-      {/* Stats Modal */}
       <StatsModal
         isOpen={statsModalOpen}
         onClose={() => setStatsModalOpen(false)}
         notes={notes}
       />
 
-      {/* Zen Mode Exit Button */}
       {settings.zenMode && (
         <button
           className="zen-exit"

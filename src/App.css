@@ -1673,3 +1673,218 @@ select:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+/* About Modal */
+.about-modal {
+  width: 700px;
+  max-width: 95vw;
+}
+
+.about-header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.about-header-content svg {
+  color: var(--accent-primary);
+}
+
+.about-section {
+  margin-bottom: 32px;
+}
+
+.about-section h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  font-family: 'Lexend', sans-serif;
+}
+
+.about-section h3 svg {
+  color: var(--accent-primary);
+}
+
+.about-section p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  font-family: 'Lexend', sans-serif;
+}
+
+.about-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.about-list li {
+  padding: 16px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  border-left: 3px solid var(--accent-primary);
+}
+
+.about-list li strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+  font-family: 'Lexend', sans-serif;
+}
+
+.about-list li p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0;
+  font-family: 'Lexend', sans-serif;
+}
+
+.about-footer {
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.about-footer p {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  font-style: italic;
+  font-family: 'Lexend', sans-serif;
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+.footer-btn {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+  font-family: 'Lexend', sans-serif;
+}
+
+.footer-btn:hover {
+  background: var(--bg-hover);
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+/* Minimalist adjustments */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+}
+
+.notes-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.note-preview {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin: 6px 0 0 0;
+  line-height: 1.4;
+}
+
+.note-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.note-meta span {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.note-tasks {
+  padding: 2px 6px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.note-time {
+  margin-left: auto;
+}
+
+/* Cleaner folder buttons */
+.folder-btn {
+  position: relative;
+  font-size: 13px;
+  padding: 10px 12px;
+}
+
+.delete-folder {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.folder-btn:hover .delete-folder {
+  opacity: 1;
+}
+
+/* Simplified backup warning */
+.backup-warning {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 169, 77, 0.08);
+  border-left: 3px solid var(--accent-warning);
+  border-radius: var(--radius-md);
+  margin-bottom: 24px;
+}
+
+.warning-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.warning-content h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--accent-warning);
+  font-family: 'Lexend', sans-serif;
+}
+
+.warning-content p {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0;
+  font-family: 'Lexend', sans-serif;
+}
+
+/* Color schemes - simplified labels */
+.color-scheme-btn span {
+  font-size: 12px;
+}
